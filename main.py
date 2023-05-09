@@ -19,7 +19,7 @@ FPS = 60
 # добавляем игровые переменные(гравитация)
 SCROLL_THRESH = 200
 GRAVITY = 1
-MAX_PLATFORMS = 20
+MAX_PLATFORMS = 10
 scroll = 0
 bg_scroll = 0
 
@@ -116,18 +116,19 @@ class Platform(pygame.sprite.Sprite):
     def update(self, scroll):
         # обновляем положение платформы
         self.rect.y += scroll
+        # проверяем не исчезла ли плафторма
+        if self.rect.top > SCREEN_HEIGHT:
+            self.kill()
 
 
 # создаем группы платформ
 platform_group = pygame.sprite.Group()
 
-# создаем временные платформы
-for p in range(MAX_PLATFORMS):
-    p_w = random.randint(40, 60)
-    p_x = random.randint(0, SCREEN_WIDTH - p_w)
-    p_y = p * random.randint(80, 120)
-    platform = Platform(p_x, p_y, p_w)
-    platform_group.add(platform)
+# создаем стартовую платформу
+platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100)
+platform_group.add(platform)
+
+
 
 # добавили игрока
 jumpy = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150)
@@ -145,8 +146,16 @@ while run:
         bg_scroll = 0
     draw_bg(bg_scroll)
 
-    # рисуем временный фон(белая линия, доходя до которой у нас экран пролистывается вниз)
-    pygame.draw.line(screen, WHITE, (0, SCROLL_THRESH), (SCREEN_WIDTH, SCROLL_THRESH))
+    # создаем платформы
+    if len(platform_group) < MAX_PLATFORMS:
+        p_w = random.randint(40, 60)
+        p_x = random.randint(0, SCREEN_WIDTH + p_w)
+        p_y = platform.rect.y - random.randint(80, 120)
+        platform = Platform(p_x, p_y, p_w)
+        platform_group.add(platform)
+
+    #
+
 
     # обновляем платформы
     platform_group.update(scroll)

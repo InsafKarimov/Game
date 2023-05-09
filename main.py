@@ -17,8 +17,11 @@ clock = pygame.time.Clock()
 FPS = 60
 
 # добавляем игровые переменные(гравитация)
+SCROLL_THRESH = 200
 GRAVITY = 1
-MAX_PLATFORMS = 10
+MAX_PLATFORMS = 20
+scroll = 0
+bg_scroll = 0
 
 # определяем рамку
 WHITE = (255, 255, 255)
@@ -27,6 +30,11 @@ WHITE = (255, 255, 255)
 bg_image = pygame.image.load(r'C:\Users\Булат\Desktop\Game\bg.png').convert_alpha()
 jumpy_image = pygame.image.load(r'C:\Users\Булат\Desktop\Game\jump.png').convert_alpha()
 platform_image = pygame.image.load(r'C:\Users\Булат\Desktop\Game\wood.png').convert_alpha()
+
+# функция для рисования фона(нужно сделать, чтобы фон пролистывался, а не двигался с нами)
+def draw_bg(bg_scroll):
+    screen.blit(bg_image, (0, 0 + bg_scroll))
+    screen.blit(bg_image, (0, -600 + bg_scroll))
 
 
 # класс игрока
@@ -42,6 +50,7 @@ class Player():
 
     def move(self):
         # сбрасываем переменные
+        scroll = 0
         dx = 0
         dy = 0
 
@@ -63,25 +72,32 @@ class Player():
         if self.rect.right + dx > SCREEN_WIDTH:
             dx = SCREEN_WIDTH - self.rect.right
 
-        #проверяем столкновение с платформой
+        # проверяем столкновение с платформой
         for platform in platform_group:
             if platform.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
-            # проверяем находимся внизу или вверху платформы
+                # проверяем находимся внизу или вверху платформы
                 if self.rect.bottom < platform.rect.centery:
                     if self.vel_y > 0:
                         self.rect.bottom = platform.rect.top
                         dy = 0
                         self.vel_y = -20
 
-
         # проверяем столкновение с землей
         if self.rect.bottom + dy > SCREEN_HEIGHT:
             dy = 0
             self.vel_y = -20
 
+        # проверяем не отскочил ли игрок за верхнюю часть экрна
+        if self.rect.top <= SCROLL_THRESH:
+            # если игрок прыгает
+            if self.vel_y < 0:
+                scroll = -dy
+
         # обновляем положение прямоугольника
         self.rect.x += dx
-        self.rect.y += dy
+        self.rect.y += dy + scroll
+
+        return scroll
 
     def draw(self):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), (self.rect.x - 12, self.rect.y - 5))
@@ -97,6 +113,10 @@ class Platform(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
+    def update(self, scroll):
+        # обновляем положение платформы
+        self.rect.y += scroll
+
 
 # создаем группы платформ
 platform_group = pygame.sprite.Group()
@@ -109,8 +129,6 @@ for p in range(MAX_PLATFORMS):
     platform = Platform(p_x, p_y, p_w)
     platform_group.add(platform)
 
-
-
 # добавили игрока
 jumpy = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150)
 
@@ -119,10 +137,19 @@ run = True
 while run:
 
     clock.tick(FPS)
-    jumpy.move()
+    scroll = jumpy.move()
 
     # рисуем фон
-    screen.blit(bg_image, (0, 0))
+    bg_scroll += scroll
+    if bg_scroll >= 600:
+        bg_scroll = 0
+    draw_bg(bg_scroll)
+
+    # рисуем временный фон(белая линия, доходя до которой у нас экран пролистывается вниз)
+    pygame.draw.line(screen, WHITE, (0, SCROLL_THRESH), (SCREEN_WIDTH, SCROLL_THRESH))
+
+    # обновляем платформы
+    platform_group.update(scroll)
 
     # рисуем игрока
     platform_group.draw(screen)

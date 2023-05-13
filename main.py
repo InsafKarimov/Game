@@ -24,9 +24,11 @@ scroll = 0
 bg_scroll = 0
 game_over = False
 score = 0
+fade_counter = 0
 
 # определяем рамку
 WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
 
 # определение шрифтов
 font_small = pygame.font.SysFont('Lucida Sans', 20)
@@ -175,6 +177,9 @@ while run:
         if jumpy.rect.top > SCREEN_HEIGHT:
             game_over = True
     else:
+        if fade_counter < SCREEN_WIDTH:
+            fade_counter += 5
+            pygame.draw.rect(screen, BLACK, (0, 0, fade_counter, SCREEN_HEIGHT))
         draw_text('GAME OVER!', font_big, WHITE, 130, 200)
         draw_text('SCORE: ' + str(score), font_big, WHITE, 130, 250)
         draw_text('PRESS SPACE TO PLAY AGAIN', font_big, WHITE, 40, 300)
@@ -184,6 +189,7 @@ while run:
             game_over = False
             score = 0
             scroll = 0
+            fade_counter = 0
             # нужно изменить положение игрока
             jumpy.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150)
             # перезагружаем платформы

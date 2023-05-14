@@ -29,6 +29,7 @@ fade_counter = 0
 # определяем рамку
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+PANEL = (153, 217, 234)
 
 # определение шрифтов
 font_small = pygame.font.SysFont('Lucida Sans', 20)
@@ -49,6 +50,11 @@ def draw_bg(bg_scroll):
     screen.blit(bg_image, (0, 0 + bg_scroll))
     screen.blit(bg_image, (0, -600 + bg_scroll))
 
+# функция дле подсчёта очков
+def draw_panel():
+    pygame.draw.rect(screen, PANEL, (0, 0, SCREEN_WIDTH, 30))
+    pygame.draw.line(screen, WHITE, (0, 30), (SCREEN_WIDTH, 30), 2)
+    draw_text('SCORE: ' + str(score), font_small, WHITE, 0, 0)
 
 # класс игрока
 class Player():
@@ -169,9 +175,16 @@ while run:
         # обновляем платформы
         platform_group.update(scroll)
 
+        # обновляем счёт
+        if scroll > 0:
+            score += scroll
+
         # рисуем игрока
         platform_group.draw(screen)
         jumpy.draw()
+
+        # рисуем счёт
+        draw_panel()
 
         # проверяем конец игры
         if jumpy.rect.top > SCREEN_HEIGHT:
@@ -180,9 +193,10 @@ while run:
         if fade_counter < SCREEN_WIDTH:
             fade_counter += 5
             pygame.draw.rect(screen, BLACK, (0, 0, fade_counter, SCREEN_HEIGHT))
-        draw_text('GAME OVER!', font_big, WHITE, 130, 200)
-        draw_text('SCORE: ' + str(score), font_big, WHITE, 130, 250)
-        draw_text('PRESS SPACE TO PLAY AGAIN', font_big, WHITE, 40, 300)
+        else:
+            draw_text('GAME OVER!', font_big, WHITE, 130, 200)
+            draw_text('SCORE: ' + str(score), font_big, WHITE, 130, 250)
+            draw_text('PRESS SPACE TO PLAY AGAIN', font_big, WHITE, 40, 300)
         key = pygame.key.get_pressed()
         if key[pygame.K_SPACE]:
             # сбросить настройки переменных

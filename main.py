@@ -1,9 +1,11 @@
 import pygame
 import random
 from Spritesheet import SpriteSheet
+from pygame import mixer
 from enemy import Enemy
 
-# инициализация pygame
+# инициализация pygame и mixer
+mixer.init()
 pygame.init()
 
 # окно игры
@@ -17,6 +19,15 @@ pygame.display.set_caption('Jumpy')
 # устанавливаем частоту кадров
 clock = pygame.time.Clock()
 FPS = 60
+
+# загрузка музыки
+pygame.mixer.music.load(r'C:\Users\Булат\Desktop\Game\music.mp3')
+pygame.mixer.music.set_volume(0.6)
+pygame.mixer.music.play(-1, 0.0)
+jump_fx = pygame.mixer.Sound(r'C:\Users\Булат\Desktop\Game\jump.mp3')
+jump_fx.set_volume(0.5)
+death_fx = pygame.mixer.Sound(r'C:\Users\Булат\Desktop\Game\death.mp3')
+death_fx.set_volume(0.5)
 
 # добавляем игровые переменные(гравитация)
 SCROLL_THRESH = 200
@@ -105,6 +116,7 @@ class Player():
                         self.rect.bottom = platform.rect.top
                         dy = 0
                         self.vel_y = -20
+                        jump_fx.play()
 
 
 
@@ -118,11 +130,14 @@ class Player():
         self.rect.x += dx
         self.rect.y += dy + scroll
 
+        # обновление маски
+        self.mask = pygame.mask.from_surface(self.image)
+
         return scroll
 
     def draw(self):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), (self.rect.x - 12, self.rect.y - 5))
-        pygame.draw.rect(screen, WHITE, self.rect, 2)
+
 
 
 # создаем класс платформы
@@ -187,7 +202,7 @@ while run:
             p_x = random.randint(0, SCREEN_WIDTH - p_w)
             p_y = platform.rect.y - random.randint(80, 120)
             p_type = random.randint(1, 2)
-            if p_type == 1 and score > 1500:
+            if p_type == 1 and score > 1000:
                 p_moving = True
             else:
                 p_moving = False
@@ -199,7 +214,7 @@ while run:
         platform_group.update(scroll)
 
         # создаем врагов
-        if len(enemy_group) == 0 and score > 2000:
+        if len(enemy_group) == 0 and score > 1500:
             enemy = Enemy(SCREEN_WIDTH, 100, bird_sheet, 1.5)
             enemy_group.add(enemy)
 
@@ -215,12 +230,20 @@ while run:
         enemy_group.draw(screen)
         jumpy.draw()
 
+
         # рисуем счёт
         draw_panel()
 
         # проверяем конец игры
         if jumpy.rect.top > SCREEN_HEIGHT:
             game_over = True
+            death_fx.play()
+        # проверяем столкновение с врагами
+        if pygame.sprite.spritecollide(jumpy, enemy_group, False):
+            if pygame.sprite.spritecollide(jumpy, enemy_group, False, pygame.sprite.collide_mask):
+                game_over = True
+                death_fx.play()
+
     else:
         if fade_counter < SCREEN_WIDTH:
             fade_counter += 5

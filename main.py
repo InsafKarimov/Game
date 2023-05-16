@@ -1,5 +1,7 @@
 import pygame
 import random
+from Spritesheet import SpriteSheet
+from enemy import Enemy
 
 # инициализация pygame
 pygame.init()
@@ -39,6 +41,9 @@ font_big = pygame.font.SysFont('Lucida Sans', 24)
 bg_image = pygame.image.load(r'C:\Users\Булат\Desktop\Game\bg.png').convert_alpha()
 jumpy_image = pygame.image.load(r'C:\Users\Булат\Desktop\Game\jump.png').convert_alpha()
 platform_image = pygame.image.load(r'C:\Users\Булат\Desktop\Game\wood.png').convert_alpha()
+bird_sheet_img = pygame.image.load(r'C:\Users\Булат\Desktop\Game\bird.png').convert_alpha()
+bird_sheet = SpriteSheet(bird_sheet_img)
+
 
 # функция вывода текста
 def draw_text(text, font, text_col, x, y):
@@ -153,12 +158,11 @@ class Platform(pygame.sprite.Sprite):
 
 # создаем группы платформ
 platform_group = pygame.sprite.Group()
+enemy_group = pygame.sprite.Group()
 
 # создаем стартовую платформу
 platform = Platform(SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT - 50, 100, False)
 platform_group.add(platform)
-
-
 
 # добавили игрока
 jumpy = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 150)
@@ -194,12 +198,21 @@ while run:
         # обновляем платформы
         platform_group.update(scroll)
 
+        # создаем врагов
+        if len(enemy_group) == 0 and score > 2000:
+            enemy = Enemy(SCREEN_WIDTH, 100, bird_sheet, 1.5)
+            enemy_group.add(enemy)
+
+        # обновление группы врагов
+        enemy_group.update(scroll, SCREEN_WIDTH)
+
         # обновляем счёт
         if scroll > 0:
             score += scroll
 
         # рисуем игрока
         platform_group.draw(screen)
+        enemy_group.draw(screen)
         jumpy.draw()
 
         # рисуем счёт
